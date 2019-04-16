@@ -1,0 +1,34 @@
+version: '2'
+
+services:
+  db:
+    image: mysql:5.7.25
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=unicorn_development
+      - MYSQL_USER=unicorn_db_user
+      - MYSQL_PASSWORD=example
+    volumes:
+      - ./unicorn/db/structure.sql:/docker-entrypoint-initdb.d/structure.sql:ro
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+
+  unicorn:
+    build: ./unicorn
+    environment:
+      - RAILS_ENV=development
+    command: bash -l -c "rake db:seed; bundle exec puma --port 3000 -b tcp://0.0.0.0"
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    volumes:
+      - ./unicorn:/unicorn
+    links:
+      - db
+    depends_on:
+      - db
+    extra_hosts:
+      - "my.orbridge.develop:192.168.99.101"
